@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Bike Tracker</title>
+  
+  <!-- iOS PWA Capabilities -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bike Maintenance">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/ios-filled/180/ffffff/bicycle.png">
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --text-sub: #94a3b8;
+      --ok: #22c55e;
+      --warn: #eab308;
+      --alert: #ef4444;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    header {
+      padding: 24px 0 16px 0;
+      border-bottom: 1px solid #334155;
+      margin-bottom: 20px;
+    }
+
+    h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    p.subtitle { margin: 4px 0 0 0; color: var(--text-sub); font-size: 14px; }
+
+    .add-ride-box {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 10px;
+    }
+
+    input[type="number"] {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 16px;
+      flex: 1;
+    }
+
+    button {
+      background: var(--accent);
+      color: #0f172a;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #334155;
+      color: var(--text);
+    }
+
+    .component-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .card-title { font-weight: 600; font-size: 16px; }
+
+    .status-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .status-ok { background: rgba(34, 197, 94, 0.2); color: var(--ok); }
+    .status-warn { background: rgba(234, 179, 8, 0.2); color: var(--warn); }
+    .status-alert { background: rgba(239, 68, 68, 0.2); color: var(--alert); }
+
+    .progress-bar {
+      height: 8px;
+      background: #334155;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 12px 0 8px 0;
+    }
+
+    .progress-fill { height: 100%; transition: width 0.3s ease; }
+
+    .card-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .actions { margin-top: 12px; display: flex; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Bike Maintenance</h1>
+    <p class="subtitle">Track component wear & service intervals</p>
+  </header>
+
+  <section class="add-ride-box">
+    <input type="number" id="rideDistance" placeholder="Add ride (km)">
+    <button onclick="addRide()">Log Ride</button>
+  </section>
+
+  <div id="componentList"></div>
+
+  <script>
+    // Initial Default Data Model
+    const defaultComponents = [
+      { id: 'chain-lube', name: 'Chain Lube / Wax', currentKm: 0, limitKm: 300 },
+      { id: 'chain-wear', name: 'Chain Replacement', currentKm: 0, limitKm: 3500 },
+      { id: 'tires', name: 'Tires (Front/Rear)', currentKm: 0, limitKm: 4500 },
+      { id: 'brake-pads', name: 'Brake Pads', currentKm: 0, limitKm: 5000 }
+    ];
+
+    function getComponents() {
+      const stored = localStorage.getItem('bike_components');
+      return stored ? JSON.parse(stored) : defaultComponents;
+    }
+
+    function saveComponents(data) {
+      localStorage.setItem('bike_components', JSON.stringify(data));
+      render();
+    }
+
+    function addRide() {
+      const input = document.getElementById('rideDistance');
+      const km = parseFloat(input.value);
+      if (isNaN(km) || km <= 0) return;
+
+      const components = getComponents();
+      components.forEach(c => c.currentKm += km);
+      saveComponents(components);
+      input.value = '';
+    }
+
+    function resetComponent(id) {
+      if (!confirm('Mark this component as serviced/replaced?')) return;
+      const components = getComponents();
+      const item = components.find(c => c.id === id);
+      if (item) item.currentKm = 0;
+      saveComponents(components);
+    }
+
+    function render() {
+      const components = getComponents();
+      const container = document.getElementById('componentList');
+      container.innerHTML = '';
+
+      components.forEach(item => {
+        const pct = Math.min(Math.round((item.currentKm / item.limitKm) * 100), 100);
+        
+        let statusClass = 'status-ok';
+        let statusText = 'OK';
+        let barColor = 'var(--ok)';
+
+        if (pct >= 100) {
+          statusClass = 'status-alert';
+          statusText = 'Service Due';
+          barColor = 'var(--alert)';
+        } else if (pct >= 80) {
+          statusClass = 'status-warn';
+          statusText = 'Soon';
+          barColor = 'var(--warn)';
+        }
+
+        container.innerHTML += `
+          <div class="component-card">
+            <div class="card-header">
+              <span class="card-title">${item.name}</span>
+              <span class="status-badge ${statusClass}">${statusText}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${pct}%; background: ${barColor};"></div>
+            </div>
+            <div class="card-stats">
+              <span>${Math.round(item.currentKm)} / ${item.limitKm} km</span>
+              <span>${pct}% used</span>
+            </div>
+            <div class="actions">
+              <button class="secondary" onclick="resetComponent('${item.id}')">Reset Service</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Register simple Service Worker for offline iOS capabilities
+    if ('serviceWorker' in navigator) {
+      const swBlob = new Blob([`
+        self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
+      `], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+    }
+
+    render();
+  </script>
+</body>
+</html>
