@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Bike Tracker</title>
+  <title>Giant TCR Tracker</title>
   
   <!-- iOS PWA Capabilities -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Bike Maintenance">
+  <meta name="apple-mobile-web-app-title" content="TCR Service">
   <link rel="apple-touch-icon" href="https://img.icons8.com/ios-filled/180/ffffff/bicycle.png">
 
   <style>
@@ -33,19 +33,19 @@
     }
 
     header {
-      padding: 24px 0 16px 0;
+      padding: 20px 0 12px 0;
       border-bottom: 1px solid #334155;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
-    h1 { margin: 0; font-size: 24px; font-weight: 700; }
-    p.subtitle { margin: 4px 0 0 0; color: var(--text-sub); font-size: 14px; }
+    h1 { margin: 0; font-size: 22px; font-weight: 700; }
+    p.subtitle { margin: 4px 0 0 0; color: var(--text-sub); font-size: 13px; }
 
     .add-ride-box {
       background: var(--card-bg);
-      padding: 16px;
+      padding: 14px;
       border-radius: 12px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       display: flex;
       gap: 10px;
     }
@@ -74,30 +74,34 @@
     button.secondary {
       background: #334155;
       color: var(--text);
+      font-size: 12px;
+      padding: 6px 12px;
     }
 
     .component-card {
       background: var(--card-bg);
       border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
     }
 
     .card-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
+      align-items: flex-start;
+      margin-bottom: 4px;
     }
 
-    .card-title { font-weight: 600; font-size: 16px; }
+    .card-title { font-weight: 600; font-size: 15px; }
+    .card-model { color: var(--text-sub); font-size: 12px; margin-bottom: 8px; }
 
     .status-badge {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 4px 8px;
+      padding: 3px 6px;
       border-radius: 6px;
       text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .status-ok { background: rgba(34, 197, 94, 0.2); color: var(--ok); }
@@ -105,11 +109,11 @@
     .status-alert { background: rgba(239, 68, 68, 0.2); color: var(--alert); }
 
     .progress-bar {
-      height: 8px;
+      height: 6px;
       background: #334155;
-      border-radius: 4px;
+      border-radius: 3px;
       overflow: hidden;
-      margin: 12px 0 8px 0;
+      margin: 10px 0 6px 0;
     }
 
     .progress-fill { height: 100%; transition: width 0.3s ease; }
@@ -121,39 +125,46 @@
       color: var(--text-sub);
     }
 
-    .actions { margin-top: 12px; display: flex; justify-content: flex-end; }
+    .actions { margin-top: 10px; display: flex; justify-content: flex-end; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>Bike Maintenance</h1>
-    <p class="subtitle">Track component wear & service intervals</p>
+    <h1>Giant TCR Service Tracker</h1>
+    <p class="subtitle">Shimano Ultegra R8000 & SLR 1 Disc Spec</p>
   </header>
 
   <section class="add-ride-box">
-    <input type="number" id="rideDistance" placeholder="Add ride (km)">
+    <input type="number" id="rideDistance" placeholder="Log ride distance (km)">
     <button onclick="addRide()">Log Ride</button>
   </section>
 
   <div id="componentList"></div>
 
   <script>
-    // Initial Default Data Model
+    // Custom Data Model matching Giant TCR Advanced Pro Team Disc
     const defaultComponents = [
-      { id: 'chain-lube', name: 'Chain Lube / Wax', currentKm: 0, limitKm: 300 },
-      { id: 'chain-wear', name: 'Chain Replacement', currentKm: 0, limitKm: 3500 },
-      { id: 'tires', name: 'Tires (Front/Rear)', currentKm: 0, limitKm: 4500 },
-      { id: 'brake-pads', name: 'Brake Pads', currentKm: 0, limitKm: 5000 }
+      { id: 'chain-lube', name: 'Chain Degrease & Lube', model: 'KMC X11SL-1', type: 'km', current: 0, limit: 250 },
+      { id: 'power-pro', name: 'Power Meter Charge', model: 'Giant PowerPro Dual', type: 'km', current: 0, limit: 1000 },
+      { id: 'sealant', name: 'Tubeless Sealant Refresh', model: 'Giant Gavia Course AC 1', type: 'days', lastDate: Date.now(), limitDays: 120 },
+      { id: 'chain-wear', name: 'Chain Wear Check / Replace', model: 'KMC X11SL-1 (11s)', type: 'km', current: 0, limit: 3500 },
+      { id: 'brake-pads', name: 'Brake Pads Check', model: 'Shimano Ultegra BR-R8070', type: 'km', current: 0, limit: 4000 },
+      { id: 'tires', name: 'Tire Wear Inspection', model: 'Giant Gavia Course AC 1 (700x25/28c)', type: 'km', current: 0, limit: 4500 },
+      { id: 'brake-rotors', name: 'Brake Rotor Thickness Check', model: 'Shimano SM-RT800 (160/140mm)', type: 'km', current: 0, limit: 8000 },
+      { id: 'hub-service', name: 'Wheel Bearing & Ratchet Lube', model: 'Giant SLR-1 (DT Swiss 360)', type: 'km', current: 0, limit: 8000 },
+      { id: 'cassette', name: 'Cassette Wear Inspection', model: 'Shimano Ultegra CS-R8000 (11-30T)', type: 'km', current: 0, limit: 10000 },
+      { id: 'bottom-bracket', name: 'Bottom Bracket Inspection', model: 'Shimano SM-BB72-41B PressFit', type: 'km', current: 0, limit: 10000 },
+      { id: 'brake-flush', name: 'Hydraulic Brake Fluid Bleed', model: 'Shimano Mineral Oil', type: 'days', lastDate: Date.now(), limitDays: 365 }
     ];
 
     function getComponents() {
-      const stored = localStorage.getItem('bike_components');
+      const stored = localStorage.getItem('tcr_components_v2');
       return stored ? JSON.parse(stored) : defaultComponents;
     }
 
     function saveComponents(data) {
-      localStorage.setItem('bike_components', JSON.stringify(data));
+      localStorage.setItem('tcr_components_v2', JSON.stringify(data));
       render();
     }
 
@@ -163,16 +174,21 @@
       if (isNaN(km) || km <= 0) return;
 
       const components = getComponents();
-      components.forEach(c => c.currentKm += km);
+      components.forEach(c => {
+        if (c.type === 'km') c.current += km;
+      });
       saveComponents(components);
       input.value = '';
     }
 
     function resetComponent(id) {
-      if (!confirm('Mark this component as serviced/replaced?')) return;
+      if (!confirm('Reset service counter for this item?')) return;
       const components = getComponents();
       const item = components.find(c => c.id === id);
-      if (item) item.currentKm = 0;
+      if (item) {
+        if (item.type === 'km') item.current = 0;
+        if (item.type === 'days') item.lastDate = Date.now();
+      }
       saveComponents(components);
     }
 
@@ -182,15 +198,25 @@
       container.innerHTML = '';
 
       components.forEach(item => {
-        const pct = Math.min(Math.round((item.currentKm / item.limitKm) * 100), 100);
-        
+        let pct = 0;
+        let statText = '';
+
+        if (item.type === 'km') {
+          pct = Math.min(Math.round((item.current / item.limit) * 100), 100);
+          statText = `${Math.round(item.current)} / ${item.limit} km`;
+        } else if (item.type === 'days') {
+          const daysElapsed = Math.floor((Date.now() - item.lastDate) / (1000 * 60 * 60 * 24));
+          pct = Math.min(Math.round((daysElapsed / item.limitDays) * 100), 100);
+          statText = `${daysElapsed} / ${item.limitDays} days`;
+        }
+
         let statusClass = 'status-ok';
         let statusText = 'OK';
         let barColor = 'var(--ok)';
 
         if (pct >= 100) {
           statusClass = 'status-alert';
-          statusText = 'Service Due';
+          statusText = 'Due';
           barColor = 'var(--alert)';
         } else if (pct >= 80) {
           statusClass = 'status-warn';
@@ -201,30 +227,25 @@
         container.innerHTML += `
           <div class="component-card">
             <div class="card-header">
-              <span class="card-title">${item.name}</span>
+              <div>
+                <div class="card-title">${item.name}</div>
+                <div class="card-model">${item.model}</div>
+              </div>
               <span class="status-badge ${statusClass}">${statusText}</span>
             </div>
             <div class="progress-bar">
               <div class="progress-fill" style="width: ${pct}%; background: ${barColor};"></div>
             </div>
             <div class="card-stats">
-              <span>${Math.round(item.currentKm)} / ${item.limitKm} km</span>
+              <span>${statText}</span>
               <span>${pct}% used</span>
             </div>
             <div class="actions">
-              <button class="secondary" onclick="resetComponent('${item.id}')">Reset Service</button>
+              <button class="secondary" onclick="resetComponent('${item.id}')">Mark Serviced</button>
             </div>
           </div>
         `;
       });
-    }
-
-    // Register simple Service Worker for offline iOS capabilities
-    if ('serviceWorker' in navigator) {
-      const swBlob = new Blob([`
-        self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
-      `], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
     }
 
     render();
