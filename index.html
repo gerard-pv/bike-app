@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Giant TCR Tracker</title>
-  
+
   <!-- iOS PWA Capabilities -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -21,6 +21,7 @@
       --ok: #22c55e;
       --warn: #eab308;
       --alert: #ef4444;
+      --line: #334155;
     }
 
     body {
@@ -34,7 +35,7 @@
 
     header {
       padding: 20px 0 12px 0;
-      border-bottom: 1px solid #334155;
+      border-bottom: 1px solid var(--line);
       margin-bottom: 16px;
     }
 
@@ -51,8 +52,8 @@
     }
 
     input[type="number"] {
-      background: #0f172a;
-      border: 1px solid #334155;
+      background: var(--bg);
+      border: 1px solid var(--line);
       color: var(--text);
       padding: 10px 14px;
       border-radius: 8px;
@@ -62,7 +63,7 @@
 
     button {
       background: var(--accent);
-      color: #0f172a;
+      color: var(--bg);
       border: none;
       padding: 10px 16px;
       border-radius: 8px;
@@ -72,10 +73,97 @@
     }
 
     button.secondary {
-      background: #334155;
+      background: var(--line);
       color: var(--text);
       font-size: 12px;
       padding: 6px 12px;
+    }
+
+    .visual-card {
+      background: linear-gradient(160deg, #1e293b 20%, #162033 100%);
+      border: 1px solid #263448;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      margin: 0 0 8px 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .section-subtitle {
+      margin: 0 0 12px 0;
+      color: var(--text-sub);
+      font-size: 12px;
+    }
+
+    .bike-canvas {
+      position: relative;
+      width: 100%;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid #2d3c51;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .bike-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      opacity: 0.95;
+    }
+
+    .part-pin {
+      position: absolute;
+      width: 120px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #2f4158;
+      border-radius: 8px;
+      padding: 6px;
+      font-size: 10px;
+      backdrop-filter: blur(2px);
+      transform: translate(-50%, -50%);
+    }
+
+    .part-pin-title {
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .part-pin-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .part-pin-meta {
+      font-size: 9px;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--line);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 10px 0 6px 0;
+    }
+
+    .progress-fill { height: 100%; transition: width 0.3s ease; }
+
+    .progress-mini {
+      height: 4px;
+      margin: 0;
+      border-radius: 2px;
     }
 
     .component-card {
@@ -108,16 +196,6 @@
     .status-warn { background: rgba(234, 179, 8, 0.2); color: var(--warn); }
     .status-alert { background: rgba(239, 68, 68, 0.2); color: var(--alert); }
 
-    .progress-bar {
-      height: 6px;
-      background: #334155;
-      border-radius: 3px;
-      overflow: hidden;
-      margin: 10px 0 6px 0;
-    }
-
-    .progress-fill { height: 100%; transition: width 0.3s ease; }
-
     .card-stats {
       display: flex;
       justify-content: space-between;
@@ -140,6 +218,28 @@
     <button onclick="addRide()">Log Ride</button>
   </section>
 
+  <section class="visual-card">
+    <h2 class="section-title">Bike Health View</h2>
+    <p class="section-subtitle">Quick visual of key systems and their service status.</p>
+    <div class="bike-canvas" id="bikeStatusVisual">
+      <svg class="bike-svg" viewBox="0 0 900 420" aria-hidden="true">
+        <circle cx="220" cy="300" r="120" fill="none" stroke="#405469" stroke-width="14"/>
+        <circle cx="680" cy="300" r="120" fill="none" stroke="#405469" stroke-width="14"/>
+        <line x1="220" y1="300" x2="380" y2="170" stroke="#7dd3fc" stroke-width="12" stroke-linecap="round"/>
+        <line x1="380" y1="170" x2="500" y2="300" stroke="#7dd3fc" stroke-width="12" stroke-linecap="round"/>
+        <line x1="500" y1="300" x2="220" y2="300" stroke="#7dd3fc" stroke-width="12" stroke-linecap="round"/>
+        <line x1="500" y1="300" x2="680" y2="300" stroke="#7dd3fc" stroke-width="12" stroke-linecap="round"/>
+        <line x1="380" y1="170" x2="600" y2="170" stroke="#7dd3fc" stroke-width="12" stroke-linecap="round"/>
+        <line x1="600" y1="170" x2="680" y2="300" stroke="#7dd3fc" stroke-width="12" stroke-linecap="round"/>
+        <line x1="600" y1="170" x2="620" y2="120" stroke="#9ca3af" stroke-width="10" stroke-linecap="round"/>
+        <line x1="590" y1="116" x2="665" y2="116" stroke="#9ca3af" stroke-width="10" stroke-linecap="round"/>
+        <line x1="390" y1="170" x2="345" y2="120" stroke="#9ca3af" stroke-width="10" stroke-linecap="round"/>
+        <line x1="320" y1="120" x2="390" y2="120" stroke="#9ca3af" stroke-width="10" stroke-linecap="round"/>
+        <circle cx="500" cy="300" r="26" fill="#60a5fa"/>
+      </svg>
+    </div>
+  </section>
+
   <div id="componentList"></div>
 
   <script>
@@ -156,6 +256,14 @@
       { id: 'cassette', name: 'Cassette Wear Inspection', model: 'Shimano Ultegra CS-R8000 (11-30T)', type: 'km', current: 0, limit: 10000 },
       { id: 'bottom-bracket', name: 'Bottom Bracket Inspection', model: 'Shimano SM-BB72-41B PressFit', type: 'km', current: 0, limit: 10000 },
       { id: 'brake-flush', name: 'Hydraulic Brake Fluid Bleed', model: 'Shimano Mineral Oil', type: 'days', lastDate: Date.now(), limitDays: 365 }
+    ];
+
+    const partVisualConfig = [
+      { id: 'drivetrain', label: 'Drivetrain', x: 52, y: 64, parts: ['chain-lube', 'chain-wear', 'cassette', 'bottom-bracket'] },
+      { id: 'front-wheel', label: 'Front Wheel', x: 23, y: 74, parts: ['tires', 'sealant', 'hub-service'] },
+      { id: 'rear-wheel', label: 'Rear Wheel', x: 78, y: 74, parts: ['tires', 'sealant', 'hub-service'] },
+      { id: 'brakes', label: 'Brakes', x: 70, y: 42, parts: ['brake-pads', 'brake-rotors', 'brake-flush'] },
+      { id: 'cockpit', label: 'Cockpit & Power', x: 40, y: 40, parts: ['power-pro'] }
     ];
 
     function getComponents() {
@@ -192,37 +300,92 @@
       saveComponents(components);
     }
 
+    function getComponentUsage(item) {
+      let pct = 0;
+      let statText = '';
+
+      if (item.type === 'km') {
+        pct = Math.min(Math.round((item.current / item.limit) * 100), 100);
+        statText = `${Math.round(item.current)} / ${item.limit} km`;
+      } else if (item.type === 'days') {
+        const lastDate = item.lastDate || Date.now();
+        const daysElapsed = Math.floor((Date.now() - lastDate) / (1000 * 60 * 60 * 24));
+        pct = Math.min(Math.round((daysElapsed / item.limitDays) * 100), 100);
+        statText = `${daysElapsed} / ${item.limitDays} days`;
+      }
+
+      let statusClass = 'status-ok';
+      let statusText = 'OK';
+      let barColor = 'var(--ok)';
+
+      if (pct >= 100) {
+        statusClass = 'status-alert';
+        statusText = 'Due';
+        barColor = 'var(--alert)';
+      } else if (pct >= 80) {
+        statusClass = 'status-warn';
+        statusText = 'Soon';
+        barColor = 'var(--warn)';
+      }
+
+      return { pct, statText, statusClass, statusText, barColor };
+    }
+
+    function renderPartVisual(components) {
+      const bikeVisual = document.getElementById('bikeStatusVisual');
+      bikeVisual.querySelectorAll('.part-pin').forEach(pin => pin.remove());
+
+      const componentsById = Object.fromEntries(components.map(c => [c.id, c]));
+
+      partVisualConfig.forEach(group => {
+        const groupItems = group.parts.map(id => componentsById[id]).filter(Boolean);
+        if (groupItems.length === 0) return;
+
+        const usages = groupItems.map(getComponentUsage);
+        const maxUsage = usages.reduce((highest, usage) => Math.max(highest, usage.pct), 0);
+
+        let statusClass = 'status-ok';
+        let barColor = 'var(--ok)';
+        let statusText = 'OK';
+
+        if (maxUsage >= 100) {
+          statusClass = 'status-alert';
+          barColor = 'var(--alert)';
+          statusText = 'Due';
+        } else if (maxUsage >= 80) {
+          statusClass = 'status-warn';
+          barColor = 'var(--warn)';
+          statusText = 'Soon';
+        }
+
+        const pin = document.createElement('div');
+        pin.className = 'part-pin';
+        pin.style.left = `${group.x}%`;
+        pin.style.top = `${group.y}%`;
+        pin.innerHTML = `
+          <div class="part-pin-title">
+            <span class="part-pin-label">${group.label}</span>
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </div>
+          <div class="progress-bar progress-mini">
+            <div class="progress-fill" style="width: ${maxUsage}%; background: ${barColor};"></div>
+          </div>
+          <div class="part-pin-meta">${maxUsage}% max usage</div>
+        `;
+
+        bikeVisual.appendChild(pin);
+      });
+    }
+
     function render() {
       const components = getComponents();
       const container = document.getElementById('componentList');
       container.innerHTML = '';
 
+      renderPartVisual(components);
+
       components.forEach(item => {
-        let pct = 0;
-        let statText = '';
-
-        if (item.type === 'km') {
-          pct = Math.min(Math.round((item.current / item.limit) * 100), 100);
-          statText = `${Math.round(item.current)} / ${item.limit} km`;
-        } else if (item.type === 'days') {
-          const daysElapsed = Math.floor((Date.now() - item.lastDate) / (1000 * 60 * 60 * 24));
-          pct = Math.min(Math.round((daysElapsed / item.limitDays) * 100), 100);
-          statText = `${daysElapsed} / ${item.limitDays} days`;
-        }
-
-        let statusClass = 'status-ok';
-        let statusText = 'OK';
-        let barColor = 'var(--ok)';
-
-        if (pct >= 100) {
-          statusClass = 'status-alert';
-          statusText = 'Due';
-          barColor = 'var(--alert)';
-        } else if (pct >= 80) {
-          statusClass = 'status-warn';
-          statusText = 'Soon';
-          barColor = 'var(--warn)';
-        }
+        const { pct, statText, statusClass, statusText, barColor } = getComponentUsage(item);
 
         container.innerHTML += `
           <div class="component-card">
