@@ -126,6 +126,99 @@
     }
 
     .actions { margin-top: 10px; display: flex; justify-content: flex-end; }
+
+    h2 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+    }
+
+    .bike-visual-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .bike-visual-wrap {
+      background: #0b1220;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+
+    .bike-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .bike-frame {
+      stroke: #64748b;
+      fill: none;
+      stroke-width: 5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .bike-wheel {
+      stroke: #64748b;
+      stroke-width: 5;
+      fill: none;
+    }
+
+    .bike-part-marker circle {
+      stroke-width: 2;
+      fill: #1e293b;
+      stroke: #94a3b8;
+      transition: all 0.2s ease;
+    }
+
+    .bike-part-marker text {
+      fill: #e2e8f0;
+      font-size: 8px;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .bike-part-marker.part-ok circle { fill: rgba(34, 197, 94, 0.25); stroke: var(--ok); }
+    .bike-part-marker.part-warn circle { fill: rgba(234, 179, 8, 0.25); stroke: var(--warn); }
+    .bike-part-marker.part-alert circle { fill: rgba(239, 68, 68, 0.25); stroke: var(--alert); }
+
+    .bike-part-status {
+      display: grid;
+      gap: 8px;
+    }
+
+    .bike-status-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .bike-status-name {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .bike-status-value {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .bike-status-bar {
+      grid-column: 1 / -1;
+      height: 5px;
+      border-radius: 3px;
+      background: #334155;
+      overflow: hidden;
+    }
+
+    .bike-status-fill {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
   </style>
 </head>
 <body>
@@ -138,6 +231,39 @@
   <section class="add-ride-box">
     <input type="number" id="rideDistance" placeholder="Log ride distance (km)">
     <button onclick="addRide()">Log Ride</button>
+  </section>
+
+  <section class="bike-visual-card">
+    <h2>Bike Parts Health View</h2>
+    <div class="bike-visual-wrap">
+      <svg class="bike-svg" viewBox="0 0 360 200" aria-label="Bike diagram with part status markers">
+        <circle class="bike-wheel" cx="90" cy="130" r="55"></circle>
+        <circle class="bike-wheel" cx="270" cy="130" r="55"></circle>
+        <line class="bike-frame" x1="90" y1="130" x2="150" y2="95"></line>
+        <line class="bike-frame" x1="150" y1="95" x2="210" y2="130"></line>
+        <line class="bike-frame" x1="210" y1="130" x2="90" y2="130"></line>
+        <line class="bike-frame" x1="150" y1="95" x2="180" y2="55"></line>
+        <line class="bike-frame" x1="180" y1="55" x2="218" y2="55"></line>
+        <line class="bike-frame" x1="150" y1="95" x2="140" y2="62"></line>
+        <line class="bike-frame" x1="130" y1="62" x2="150" y2="62"></line>
+        <line class="bike-frame" x1="210" y1="130" x2="248" y2="80"></line>
+        <line class="bike-frame" x1="248" y1="80" x2="282" y2="85"></line>
+        <circle class="bike-frame" cx="150" cy="130" r="9"></circle>
+
+        <g class="bike-part-marker" data-part="chain-lube" transform="translate(168 128)"><circle r="9"></circle><text y="3">CL</text></g>
+        <g class="bike-part-marker" data-part="chain-wear" transform="translate(188 122)"><circle r="9"></circle><text y="3">CW</text></g>
+        <g class="bike-part-marker" data-part="cassette" transform="translate(248 127)"><circle r="9"></circle><text y="3">CS</text></g>
+        <g class="bike-part-marker" data-part="brake-pads" transform="translate(244 90)"><circle r="9"></circle><text y="3">BP</text></g>
+        <g class="bike-part-marker" data-part="brake-rotors" transform="translate(284 130)"><circle r="9"></circle><text y="3">BR</text></g>
+        <g class="bike-part-marker" data-part="tires" transform="translate(60 130)"><circle r="9"></circle><text y="3">TR</text></g>
+        <g class="bike-part-marker" data-part="hub-service" transform="translate(90 130)"><circle r="9"></circle><text y="3">HB</text></g>
+        <g class="bike-part-marker" data-part="bottom-bracket" transform="translate(150 130)"><circle r="9"></circle><text y="3">BB</text></g>
+        <g class="bike-part-marker" data-part="power-pro" transform="translate(176 56)"><circle r="9"></circle><text y="3">PM</text></g>
+        <g class="bike-part-marker" data-part="sealant" transform="translate(108 80)"><circle r="9"></circle><text y="3">SL</text></g>
+        <g class="bike-part-marker" data-part="brake-flush" transform="translate(263 83)"><circle r="9"></circle><text y="3">BF</text></g>
+      </svg>
+    </div>
+    <div id="bikePartStatus" class="bike-part-status"></div>
   </section>
 
   <div id="componentList"></div>
@@ -192,37 +318,77 @@
       saveComponents(components);
     }
 
+    function getComponentStats(item) {
+      let pct = 0;
+      let statText = '';
+
+      if (item.type === 'km') {
+        pct = Math.min(Math.round((item.current / item.limit) * 100), 100);
+        statText = `${Math.round(item.current)} / ${item.limit} km`;
+      } else if (item.type === 'days') {
+        const lastDate = item.lastDate || Date.now();
+        const daysElapsed = Math.floor((Date.now() - lastDate) / (1000 * 60 * 60 * 24));
+        pct = Math.min(Math.round((daysElapsed / item.limitDays) * 100), 100);
+        statText = `${daysElapsed} / ${item.limitDays} days`;
+      }
+
+      let statusClass = 'status-ok';
+      let statusText = 'OK';
+      let statusKey = 'ok';
+      let barColor = 'var(--ok)';
+
+      if (pct >= 100) {
+        statusClass = 'status-alert';
+        statusText = 'Due';
+        statusKey = 'alert';
+        barColor = 'var(--alert)';
+      } else if (pct >= 80) {
+        statusClass = 'status-warn';
+        statusText = 'Soon';
+        statusKey = 'warn';
+        barColor = 'var(--warn)';
+      }
+
+      return { pct, statText, statusClass, statusText, statusKey, barColor };
+    }
+
+    function renderBikeVisual(components, statsById) {
+      const markerNodes = document.querySelectorAll('.bike-part-marker');
+      markerNodes.forEach(marker => {
+        marker.classList.remove('part-ok', 'part-warn', 'part-alert');
+        const partStats = statsById[marker.dataset.part];
+        if (partStats) marker.classList.add(`part-${partStats.statusKey}`);
+      });
+
+      const statusContainer = document.getElementById('bikePartStatus');
+      statusContainer.innerHTML = components.map(item => {
+        const stats = statsById[item.id];
+        return `
+          <div class="bike-status-row">
+            <span class="bike-status-name">${item.name}</span>
+            <span class="bike-status-value">${stats.pct}%</span>
+            <div class="bike-status-bar">
+              <div class="bike-status-fill" style="width: ${stats.pct}%; background: ${stats.barColor};"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
     function render() {
       const components = getComponents();
       const container = document.getElementById('componentList');
       container.innerHTML = '';
+      const statsById = {};
 
       components.forEach(item => {
-        let pct = 0;
-        let statText = '';
+        statsById[item.id] = getComponentStats(item);
+      });
 
-        if (item.type === 'km') {
-          pct = Math.min(Math.round((item.current / item.limit) * 100), 100);
-          statText = `${Math.round(item.current)} / ${item.limit} km`;
-        } else if (item.type === 'days') {
-          const daysElapsed = Math.floor((Date.now() - item.lastDate) / (1000 * 60 * 60 * 24));
-          pct = Math.min(Math.round((daysElapsed / item.limitDays) * 100), 100);
-          statText = `${daysElapsed} / ${item.limitDays} days`;
-        }
+      renderBikeVisual(components, statsById);
 
-        let statusClass = 'status-ok';
-        let statusText = 'OK';
-        let barColor = 'var(--ok)';
-
-        if (pct >= 100) {
-          statusClass = 'status-alert';
-          statusText = 'Due';
-          barColor = 'var(--alert)';
-        } else if (pct >= 80) {
-          statusClass = 'status-warn';
-          statusText = 'Soon';
-          barColor = 'var(--warn)';
-        }
+      components.forEach(item => {
+        const stats = statsById[item.id];
 
         container.innerHTML += `
           <div class="component-card">
@@ -231,14 +397,14 @@
                 <div class="card-title">${item.name}</div>
                 <div class="card-model">${item.model}</div>
               </div>
-              <span class="status-badge ${statusClass}">${statusText}</span>
+              <span class="status-badge ${stats.statusClass}">${stats.statusText}</span>
             </div>
             <div class="progress-bar">
-              <div class="progress-fill" style="width: ${pct}%; background: ${barColor};"></div>
+              <div class="progress-fill" style="width: ${stats.pct}%; background: ${stats.barColor};"></div>
             </div>
             <div class="card-stats">
-              <span>${statText}</span>
-              <span>${pct}% used</span>
+              <span>${stats.statText}</span>
+              <span>${stats.pct}% used</span>
             </div>
             <div class="actions">
               <button class="secondary" onclick="resetComponent('${item.id}')">Mark Serviced</button>
